@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>
+            X-admin v1.0
+        </title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="format-detection" content="telephone=no">
+        <link rel="stylesheet" href="./css/x-admin.css" media="all">
+        <style type="text/css">
+        	#page ul{
+        		overflow: hidden;
+        	}
+        	#page ul li{
+    		    float: left;
+			    border: 1px solid lightgray;
+			    margin-left: 10px;
+			    text-align: center;
+			    width: 25px;
+			    height: 25px;
+			    line-height: 25px;
+			    text-align: center;
+			    border-radius: 4px;
+			    cursor: pointer;
+        	}
+        	#page ul .seleced{
+        		background: lightgrey;
+        	}
+        	#go_tarPage{
+    		    width: 80px;
+			    height: 25px;
+			    margin-top: 10px;
+			    margin-left: 10px;
+			    border: 1px solid lightgray;
+			    border-radius: 9px;
+			    box-sizing: border-box;
+			    padding-left: 20px;
+        	}
+        	
+        	#page_go input[type='button']{
+        		width: 64px;
+        	}
+        	#keyword_inp{
+        		width: 150px;
+			    height: 26px;
+			    border: 1px solid lightgray;
+			    border-radius: 2px;
+			    box-sizing: border-box;
+			    padding-left: 10px;
+			    margin-left: 50px;
+        	}
+        	#keyword_btn{
+		        width: 100px;
+			    height: 26px;
+			    border: 1px solid lightgray;
+			    border-radius: 2px;
+			    cursor: pointer;
+        	}
+        	#page_go #go{
+    		    width: 25px;
+			    height: 25px;
+			    background: lightgray;
+			    border: 1px solid lightgray;
+			    border-radius: 7px;
+			    color: white;
+			    line-height: 22px;
+			    text-align: center;
+			    font-size: 15px;
+			    margin-top: 7px;
+			    cursor: pointer;
+        	}
+        </style>
+    </head>
+    <body>
+        <div class="x-nav">
+            <span class="layui-breadcrumb">
+              <a><cite>首页</cite></a>
+              <a><cite>新闻管理</cite></a>
+              <a><cite>新闻列表</cite></a>
+            </span>
+            <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right"  href="javascript:location.replace(location.href);" title="刷新"><i class="layui-icon" style="line-height:30px">ဂ</i></a>
+        </div>
+        <div class="x-body">
+            <xblock>
+            	<button class="layui-btn layui-btn-danger" onclick="delAll()"><i class="layui-icon">&#xe640;</i>批量删除</button>
+            	<button class="layui-btn" onclick="banner_add('添加用户','banner-add.html','600','500')"><i class="layui-icon">&#xe608;</i>添加</button>
+            	<input type="text" id="keyword_inp">
+            	<input type="button" value="关键字查询" id="keyword_btn">
+            	<span class="x-right" style="line-height:40px">共有数据：88 条</span></xblock>
+            <table class="layui-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" id='quanxuan'>
+                        </th>
+                        <th>
+                            ID
+                        </th>
+                        <th>
+                      	      缩略图
+                        </th>
+                        <th>
+                     	       链接
+                        </th>
+                        <th>
+                    	        描述
+                        </th>
+                        <th>
+                         	   新闻类型
+                        </th>
+                        <th>
+                        	    更新时间
+                        </th>
+                        <th>
+                         	   操作
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="x-img">
+                	
+                </tbody>
+            </table>
+
+            <div id="page"></div>
+            <div id="page_go">
+            	<input type="button" value="第一页" id="first_page">
+            	<input type="text" id="go_tarPage">
+            	<input type='button' id="go" value="go">
+            	<input type="button" id="last_page" value="最后一页" />
+            </div>
+        </div>
+        <script type="text/javascript" src="js/jquery.min.js"></script>
+    	<script type="text/javascript" src="lib/cookie.js"></script>
+    	<script type="text/javascript">
+    		//tbody的数据渲染
+    		let url1='http://127.0.0.1:4000/api/news/paging_news';
+    		let url2='http://127.0.0.1:4000/api/news/news_list';
+    		var all_page=0; //总页数
+    		
+    		$.post(url2,{},(res)=>{
+    			var all_num=res.length;  //全部新闻的总数
+    			$('.x-right').html('共有数据：'+res.length+' 条');
+    			all_page=Math.ceil(all_num/3);  //总页数
+    			var html2="<ul><li><</li>";
+    			for(let i=0;i<all_page;i++){
+    				html2+=`
+		    				<li name='aa'>${i+1}</li>
+    				`;
+    			}
+    			html2+="<li>></li></ul>";
+    			$('#page').html(html2)
+    			
+    		})
+    		var page_number=3; //每页信息的总数
+    		var pages=0;  //第几页
+    		
+    		
+    		//数据渲染
+    		function show_info(data,pages){
+    			let html1='';
+    			for(let i=data.length-1;i>=0;i--){
+    				html1+=`
+    					 <tr name='${data[i]._id}'>
+	                        <td><input type="checkbox" class="good_check"></td>
+	                        <td>${data[i]._id}</td>
+	                        <td><img  src="${data[i].img}" width="200" height='80' alt=""></td>
+	                        <td>${data[i].src}</td>
+	                        <td>${data[i].title}</td>
+	                        <td class="td-status">${data[i].type}</td>
+	                        <td>${data[i].uptime}</td>
+	                        <td class="td-manage">
+	                            <a title="编辑" href="javascript:;" onclick="banner_edit('编辑','banner-edit.html','4','','510')"
+	                            class="ml-5" style="text-decoration:none">
+	                                <i class="layui-icon">&#xe642;</i>
+	                            </a>
+	                            <a title="删除" href="javascript:;" onclick="banner_del(this,'1')" 
+	                            style="text-decoration:none">
+	                                <i class="layui-icon">&#xe640;</i>
+	                            </a>
+	                        </td>
+	                    </tr>
+    				`
+    			}
+    			$('#x-img').html(html1);
+    			
+    			//所有页数不变色
+    			$('#page ul li').attr('class','');
+    			//当前页变色
+    			let ele=document.querySelectorAll("#page ul li[name='aa']")[pages];
+    			console.log(document.querySelectorAll("#page ul li[name='aa']"))
+    			ele.setAttribute('class','seleced')
+    		}
+    		//数据+页数渲染
+    		$.post(url1,{'numbers':page_number,'page':0},(data)=>{
+    			show_info(data,0);
+    		})
+    		
+    		
+    		//点击页数，跳转相应页面
+    		var pagess=document.querySelector('#page');
+        	let nowPage=0;
+        	let targPage=0;
+    		page.onclick=function(e){
+    			var nodenames=e.target.nodeName;
+    			var page_num=e.target.innerHTML;
+    			let pagea=Number($("#page li[class='seleced']").html()); //当前显示页面的页数
+        		switch(page_num){
+        			case '&gt;':  //下一页
+        				if(pagea>=all_page){
+        					pagea=all_page;
+        				}else{
+        					pagea+=pagea;
+        					//判断关键字搜索框是否有文字
+        					if($('#keyword_inp').val()!=''){
+        						$.post(url2,{'title':$('#keyword_inp').val()},(data)=>{
+					    			show_info(data,pagea-1);
+					    		})
+        					}else{
+        						$.post(url1,{'numbers':page_number,'page':pagea-1},(data)=>{
+					    			show_info(data,pagea-1);
+					    		})
+        					}
+        					
+        					
+        				}
+						break;
+        			case '&lt;':  ///上一页
+        				if(pagea<=1){
+        					pagea=1;
+        				}else{
+        					--pagea;
+        					$.post(url1,{'numbers':page_number,'page':pagea-1},(data)=>{
+				    			show_info(data,pagea-1);
+				    		})
+        				}
+						break;
+        			default:
+    					$.post(url1,{'numbers':page_number,'page':page_num-1},(data)=>{
+			    			show_info(data,page_num-1);
+			    		})
+    					break;
+        		}
+    		}
+    		
+    		//在go_tarPage框输入数字，点go，跳转到数字页
+    		$('#go').click(function(){
+    			let numb=$('#go_tarPage').val();
+    			if(numb!=''){
+    				if(numb==Number(numb)){
+    					if(numb>all_page){
+    						confirm("超额拉");
+    					}else if(numb<=0){
+    						confirm("还没开发这一页啊");
+    					}else{
+    						console.log($('#keyword_inp').val())
+    						if($('#keyword_inp').val()!=''){
+    							fn1(url2,$('#keyword_inp').val(),numb-1);
+    						}else{
+    							fn(url1,numb-1)
+    						}
+    					}
+    				}
+    			}
+    		})
+    		
+    		//url1的函数
+			function fn(url,page){
+				//let url1='http://127.0.0.1:4000/api/news/paging_news';
+    			//let url2='http://127.0.0.1:4000/api/news/news_list';
+				$.post(url,{'numbers':page_number,'page':page},(data)=>{
+	    			show_info(data,page);
+	    		})
+			}
+			//url2的函数
+			function fn1(url,title,page){
+				$.post(url,{'title':title},(data)=>{
+	    			show_info(data,page);
+	    		})
+			}
+			//点击“第一页”跳转到第一页
+			$('#first_page').click(function(){
+				if($('#keyword_inp').val()!=''){
+					fn1(url2,$('#keyword_inp').val(),0);
+				}else{
+					fn(url1,0);
+				}
+			})
+			//点击“最后一页”跳转到最后一夜
+			$('#last_page').click(function(){
+				console.log($('#keyword_inp').val())
+				if($('#keyword_inp').val()!=''){
+					console.log('没空')
+					fn1(url2,$('#keyword_inp').val(),all_page-1);
+				}else{
+					console.log('空')
+					fn(url1,all_page-1);
+				}
+			})
+    		
+    		//关键字查询
+    		$('#keyword_btn').click(function(){
+    			var cont=$('#keyword_inp').val();
+    			if(cont!=''){
+    				fn1(url2,cont,0);
+    				$('#page').html('')
+    			}else{
+    				fn(url1,0)
+    			}
+    		})
+    		
+    		
+    		//点击“编辑”按钮，添加cookie
+    		$('#x-img').on('click',"a[title='编辑']",function(){
+    			let ids=$(this).parent().parent().attr('name')
+    			setCookie('ids',ids);
+    		})
+    	</script>
+        <script src="./lib/layui/layui.js" charset="utf-8"></script>
+        <script src="./js/x-layui.js" charset="utf-8"></script>
+        <script>
+            layui.use(['laydate','element','laypage','layer'], function(){
+                $ = layui.jquery;//jquery
+              laydate = layui.laydate;//日期插件
+              lement = layui.element();//面包导航
+              laypage = layui.laypage;//分页
+              layer = layui.layer;//弹出层
+
+              //以上模块根据需要引入
+
+                layer.ready(function(){ //为了layer.ext.js加载完毕再执行
+                  layer.photos({
+                    photos: '#x-img'
+                    //,shift: 5 //0-6的选择，指定弹出图片动画类型，默认随机
+                  });
+                }); 
+              
+            });
+            
+            
+            var isChecked=true;
+        	//全选
+        	$('#quanxuan').on('click',function(){
+        		//attr()加普通属性      title    prop() 加有行为的属性
+        		if(isChecked){
+					//全选
+					$('.good_check').prop('checked','checked');
+					$('#quanxuan').prop('checked','checked');
+				}else{
+					//不选
+					$('.good_check').removeAttr('checked');
+					$('#quanxuan').removeAttr('checked');
+				}
+				isChecked=!isChecked;
+				var arr=checked();//判断哪行被选中，存到该数组中
+				allChecked()
+        	})
+        	//在全选状态时，点击全选下面的复选框，则全选状态消失
+        	$('tbody').on('click','.good_check',function(){
+        		if($('#quanxuan').is(':checked')){//判断全选按钮是否被选中
+        			$('#quanxuan').removeAttr('checked');
+        		}
+        		allChecked()
+       		 })
+        	//判断全选下的复选框全部选中时，全选框被选中
+        	function allChecked(){
+        		let arr=[];
+        		var le=$('.layui-table .good_check').size();
+        		for(let i=0;i<le;i++){
+        			let status=$('tbody .good_check').eq(i).is(':checked');
+        			if(status){
+        				arr.push(status)
+        			}
+        		}
+        		if(arr.length==le){
+        			let elem=document.querySelector("input[type='checkbox']");
+        			elem.checked=true;
+        		}
+        		
+        	}
+        	
+        	//判断哪行被选中了
+			function checked(){
+				var arr=[];//设置一个空数组，等会被选中的就把下标存起来
+				var le=$('.layui-table .good_check').size();
+				for(var i=0;i<le;i++){
+					if($('.layui-table .good_check').eq(i).prop('checked')){
+						//不为空证明被选中了
+						arr.push(i);
+					}
+				}
+				return arr;
+			}
+
+            //批量删除提交
+             function delAll () {
+                layer.confirm('确认要删除吗？',function(index){
+                    let alltr=$('.good_check').parent().parent();  //获取每一行
+                	let arr=checked(); //获取被选中的行
+                	for(let i=0;i<arr.length;i++){
+                		let elem=alltr[arr[i]];
+                		console.log(elem.getAttribute('name'))
+                		elem.remove();
+                		 $.post('http://127.0.0.1:4000/api/news/delet_news',
+		                    	{'_id':elem.getAttribute('name')},
+		                    	function(res){
+		                    		console.log(res)
+		                    		if(res=='删除成功'){
+		                    			layer.msg('删除成功', {icon: 1});
+		                    			show_pages(3,0);
+		                    		}
+		                    	}
+	                     )
+                   }
+                });
+             }
+             /*添加*/
+            function banner_add(title,url,w,h){
+                x_admin_show(title,url,w,h);
+            }
+             /*停用*/
+            function banner_stop(obj,id){
+                layer.confirm('确认不显示吗？',function(index){
+                    //发异步把用户状态进行更改
+                    $(obj).parents("tr").find(".td-manage").prepend('<a style="text-decoration:none" onClick="banner_start(this,id)" href="javascript:;" title="显示"><i class="layui-icon">&#xe62f;</i></a>');
+                    $(obj).parents("tr").find(".td-status").html('<span class="layui-btn layui-btn-disabled layui-btn-mini">不显示</span>');
+                    $(obj).remove();
+                    layer.msg('不显示!',{icon: 5,time:1000});
+                });
+            }
+
+            /*启用*/
+            function banner_start(obj,id){
+                layer.confirm('确认要显示吗？',function(index){
+                    //发异步把用户状态进行更改
+                    $(obj).parents("tr").find(".td-manage").prepend('<a style="text-decoration:none" onClick="banner_stop(this,id)" href="javascript:;" title="不显示"><i class="layui-icon">&#xe601;</i></a>');
+                    $(obj).parents("tr").find(".td-status").html('<span class="layui-btn layui-btn-normal layui-btn-mini">已显示</span>');
+                    $(obj).remove();
+                    layer.msg('已显示!',{icon: 6,time:1000});
+                });
+            }
+            // 编辑
+            function banner_edit (title,url,id,w,h) {
+                x_admin_show(title,url,w,h); 
+            }
+            /*删除*/
+            function banner_del(obj,id){
+            	let ids=obj.parentNode.parentNode.getAttribute('name');
+                layer.confirm('确认要删除吗？',function(index){
+                	//数据库里删除数据
+                	let url2='http://127.0.0.1:4000/api/news/delet_news'
+                	$.post(url2,{'_id':ids},(res)=>{
+                		console.log(res)
+                	})
+                	
+                    //发异步删除数据
+                    $(obj).parents("tr").remove();
+                    layer.msg('已删除!',{icon:1,time:1000});
+                });
+            }
+            </script>
+            <script>
+        var _hmt = _hmt || [];
+        (function() {
+          var hm = document.createElement("script");
+          hm.src = "https://hm.baidu.com/hm.js?b393d153aeb26b46e9431fabaf0f6190";
+          var s = document.getElementsByTagName("script")[0]; 
+          s.parentNode.insertBefore(hm, s);
+        })();
+        </script>
+    </body>
+</html>
